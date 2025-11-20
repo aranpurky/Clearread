@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clearread</title>
+    <style>
+        :root {
+            /* Base Variables */
+            --bg-body: #f4f4f5;
+            --bg-paper: #ffffff;
+            --text-main: #18181b;
+            --text-muted: #71717a;
+            --primary: #2563eb;
+            --highlight: #fde047;
+            --border: #e4e4e7;
+            --shadow: 0 4px 20px -5px rgba(0,0,0,0.1);
+            --font-current: 'Inter', sans-serif;
+            --radius: 12px;
+            
+            /* Font Stacks */
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-serif: 'Merriweather', Georgia, serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        /* --- Themes --- */
+        [data-theme="white"] {
+            --bg-body: #f0f2f5;
+            --bg-paper: #ffffff;
+            --text-main: #18181b;
+            --text-muted: #71717a;
+            --primary: #2563eb; /* Blue */
+            --highlight: #fde047;
+        }
+
+        [data-theme="cream"] {
+            --bg-body: #eee9da;
+            --bg-paper: #fbf6e9;
+            --text-main: #433422;
+            --text-muted: #8c7b66;
+            --primary: #d97706; /* Amber */
+            --border: #e6dbc4;
+            --highlight: #eaddcf; 
+        }
+
+        [data-theme="graphite"] {
+            --bg-body: #18181b;
+            --bg-paper: #27272a;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --primary: #60a5fa; /* Light Blue */
+            --highlight: #3f3f46;
+            --border: #3f3f46;
+            --shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        [data-theme="black"] {
+            --bg-body: #000000;
+            --bg-paper: #000000;
+            --text-main: #d4d4d8;
+            --text-muted: #52525b;
+            --primary: #ffffff; /* White accent */
+            --highlight: #222222;
+            --border: #27272a;
+            --shadow: none;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-current);
+            transition: background-color 0.4s ease, color 0.4s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Navbar --- */
+        nav {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(128,128,128, 0.1);
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
+
+        /* Dual Color Logo */
+        .brand span { color: var(--primary); }
+
+        .toolbar {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        /* --- Icon Buttons --- */
+        .icon-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background-color: rgba(128,128,128, 0.1);
+            color: var(--text-main);
+        }
+
+        .icon-btn.active {
+            background-color: var(--bg-paper);
+            border-color: var(--border);
+            color: var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* In Midnight mode, active icons should be white */
+        [data-theme="black"] .icon-btn.active { color: #fff; border: 1px solid #333; }
+
+        .icon-btn svg { width: 20px; height: 20px; }
+
+        /* Tooltips (Shared Logic) */
+        .icon-btn::after, .stat-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: var(--text-main);
+            color: var(--bg-paper);
+            font-size: 0.75rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            transition: 0.2s ease;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Icon Btn Tooltip Position */
+        .icon-btn::after { bottom: -40px; transform: translateX(-50%) translateY(-5px); }
+        .icon-btn:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .separator {
+            width: 1px;
+            height: 24px;
+            background-color: var(--border);
+            margin: 0 8px;
+        }
+
+        /* CTA Button */
+        .cta-btn {
+            background-color: var(--primary);
+            color: #ffffff; 
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 12px;
+            transition: transform 0.1s;
+        }
+
+        /* Special fix for Midnight mode: Primary is white, so text must be black */
+        [data-theme="black"] .cta-btn { color: #000000; }
+        
+        .cta-btn:active { transform: scale(0.96); }
+
+        /* --- Main Content --- */
+        main {
+            flex: 1;
+            padding: 3rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .paper {
+            background-color: var(--bg-paper);
+            width: 100%;
+            max-width: 800px;
+            padding: 4rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            min-height: 60vh;
+            transition: background-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        /* --- Text Input (Variable Height) --- */
+        textarea {
+            width: 100%;
+            border: none;
+            resize: none;
+            background: transparent;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            font-family: inherit;
+            outline: none;
+            overflow: hidden;
+            min-height: 300px; 
+            display: block;
+        }
+        textarea::placeholder { color: var(--text-muted); opacity: 0.5; }
+
+        /* --- Reader Output --- */
+        #readerView { display: none; animation: fadeIn 0.5s ease; }
+
+        .stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Center the stats */
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .stat-item {
+            position: relative;
+            cursor: help;
+            text-align: center;
+        }
+
+        .stat-item span { display: block; font-size: 1.3rem; color: var(--text-main); font-weight: 700; text-transform: none; letter-spacing: 0; margin-bottom: 4px;}
+
+        /* Stat Tooltip specific positioning */
+        .stat-item::after {
+            top: -45px; /* Show ABOVE the stat */
+            bottom: auto;
+            transform: translateX(-50%) translateY(5px);
+        }
+        .stat-item:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .content-body {
+            font-size: 1.25rem;
+            line-height: 1.8;
+        }
+        .content-body p { margin-bottom: 1.6em; }
+
+        /* Highlights */
+        mark {
+            background-color: var(--highlight);
+            color: inherit;
+            padding: 2px 0;
+            border-radius: 4px;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+            transition: background-color 0.3s;
+        }
+        .highlights-off mark { background-color: transparent; }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 700px) {
+            .paper { padding: 2rem; }
+            .toolbar { gap: 2px; }
+            nav { flex-direction: column; gap: 1rem; }
+            .icon-btn { width: 35px; height: 35px; }
+            .stats-bar { gap: 1.5rem; }
+            .stat-item { flex: 1 1 40%; } 
+        }
+    </style>
+</head>
+<body data-theme="white">
+
+    <nav>
+        <div class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+            <div>Clear<span>read</span></div>
+        </div>
+
+        <div class="toolbar">
+            <button class="icon-btn active" data-type="font" data-val="sans" data-tooltip="Sans-Serif">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+            </button>
+            <button class="icon-btn" data-type="font" data-val="serif" data-tooltip="Serif">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </button>
+            <button class="icon-btn" data-type="font" data-val="mono" data-tooltip="Monospace">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            </button>
+
+            <div class="separator"></div>
+
+            <button class="icon-btn active" data-type="theme" data-val="white" data-tooltip="Modern">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+            <button class="icon-btn" data-type="theme" data-val="cream" data-tooltip="Paper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+            </button>
+            <button class="icon-btn" data-type="theme" data-val="graphite" data-tooltip="Graphite">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <button class="icon-btn" data-type="theme" data-val="black" data-tooltip="Midnight">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
+            </button>
+
+            <div class="separator"></div>
+            
+            <button id="btnHighlight" class="icon-btn hidden" data-tooltip="Toggle Highlights">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+            </button>
+            
+            <button id="btnAction" class="cta-btn">Process</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="paper">
+            
+            <div id="editorView">
+                <textarea id="textInput" placeholder="Paste text here. The box will expand as you type..."></textarea>
+            </div>
+
+            <div id="readerView">
+                <div class="stats-bar">
+                    <div class="stat-item" data-tooltip="Total word count">
+                        <span id="statWords">0</span>Words
+                    </div>
+                    <div class="stat-item" data-tooltip="Reading at 220 wpm">
+                        <span id="statTime">0m</span>Time
+                    </div>
+                    <div class="stat-item" data-tooltip="Total number of sentences">
+                        <span id="statSentences">0</span>Sentences
+                    </div>
+                    <div class="stat-item" data-tooltip="% of words > 6 chars">
+                        <span id="statComplexity">0%</span>Complexity
+                    </div>
+                    <div class="stat-item" data-tooltip="Key term density score (0-10)">
+                        <span id="statDensity">0.0</span>Density
+                    </div>
+                </div>
+                <div id="output" class="content-body"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- Setup ---
+        const els = {
+            body: document.body,
+            themeBtns: document.querySelectorAll('[data-type="theme"]'),
+            fontBtns: document.querySelectorAll('[data-type="font"]'),
+            btnAction: document.getElementById('btnAction'),
+            btnHighlight: document.getElementById('btnHighlight'),
+            editor: document.getElementById('editorView'),
+            reader: document.getElementById('readerView'),
+            input: document.getElementById('textInput'),
+            output: document.getElementById('output'),
+            stats: {
+                words: document.getElementById('statWords'),
+                time: document.getElementById('statTime'),
+                sentences: document.getElementById('statSentences'),
+                complexity: document.getElementById('statComplexity'),
+                density: document.getElementById('statDensity')
+            }
+        };
+
+        const STATE = {
+            mode: 'edit', // edit | read
+            highlights: true
+        };
+
+        const STOP_WORDS = new Set(["a","about","above","after","again","against","all","am","an","and","any","are","as","at","be","because","been","before","being","below","between","both","but","by","can","could","did","do","does","doing","down","during","each","few","for","from","further","had","has","have","having","he","her","here","hers","herself","him","himself","his","how","i","if","in","into","is","it","its","itself","just","me","more","most","my","myself","no","nor","not","now","of","off","on","once","only","or","other","our","ours","ourselves","out","over","own","same","she","should","so","some","such","than","that","the","their","theirs","them","themselves","then","there","these","they","this","those","through","to","too","under","until","up","very","was","we","were","what","when","where","which","while","who","whom","why","with","would","you","your","yours","yourself","yourselves"]);
+
+        // --- 1. Auto-Expanding Textarea ---
+        els.input.addEventListener('input', function() {
+            this.style.height = 'auto'; // Reset height
+            this.style.height = (this.scrollHeight) + 'px'; // Set to scroll height
+        });
+
+        // --- 2. Theme & Font Handling ---
+        function setActive(buttons, value) {
+            buttons.forEach(btn => {
+                if (btn.dataset.val === value) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        els.themeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = btn.dataset.val;
+                els.body.setAttribute('data-theme', val);
+                setActive(els.themeBtns, val);
+            });
+        });
+
+        els.fontBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = btn.dataset.val;
+                const fontVar = val === 'mono' ? 'var(--font-mono)' : val === 'serif' ? 'var(--font-serif)' : 'var(--font-sans)';
+                document.documentElement.style.setProperty('--font-current', fontVar);
+                setActive(els.fontBtns, val);
+            });
+        });
+
+        // --- 3. Toggle Highlights ---
+        els.btnHighlight.addEventListener('click', () => {
+            STATE.highlights = !STATE.highlights;
+            els.reader.classList.toggle('highlights-off', !STATE.highlights);
+            els.btnHighlight.classList.toggle('active', STATE.highlights);
+        });
+
+        // --- 4. Main Action (Read/Edit) ---
+        els.btnAction.addEventListener('click', () => {
+            if (STATE.mode === 'edit') {
+                const text = els.input.value.trim();
+                if(!text) return;
+
+                processText(text);
+                
+                els.editor.classList.add('hidden');
+                els.reader.classList.remove('hidden');
+                els.reader.style.display = 'block';
+                els.btnHighlight.classList.remove('hidden');
+                els.btnHighlight.classList.add('active');
+                els.btnAction.innerText = "Edit";
+                STATE.mode = 'read';
+                window.scrollTo(0,0);
+            } else {
+                els.reader.classList.add('hidden');
+                els.editor.classList.remove('hidden');
+                els.btnHighlight.classList.add('hidden');
+                els.btnAction.innerText = "Process";
+                STATE.mode = 'edit';
+            }
+        });
+
+        // --- 5. Analysis Engine ---
+        function processText(text) {
+            const words = text.match(/\b\w+\b/g) || [];
+            
+            // 1. Stats: Count & Time
+            els.stats.words.innerText = words.length;
+            els.stats.time.innerText = Math.ceil(words.length / 220) + "m";
+
+            // 2. Stats: Complexity (Words > 6 chars)
+            const longWords = words.filter(w => w.length > 6).length;
+            const complexityScore = words.length > 0 ? Math.round((longWords / words.length) * 100) : 0;
+            els.stats.complexity.innerText = complexityScore + "%";
+
+            // 3. Freq Analysis
+            const freq = {};
+            words.forEach(w => {
+                const clean = w.toLowerCase();
+                if (!STOP_WORDS.has(clean) && clean.length > 2) {
+                    freq[clean] = (freq[clean] || 0) + 1;
+                }
+            });
+
+            // 4. Prepare Paragraphs & Sentences
+            const paragraphs = text.split(/\n\s*\n/);
+            const allSentencesScores = [];
+            let totalSentences = 0;
+
+            // First pass: Calculate scores and count sentences
+            paragraphs.forEach(para => {
+                if(!para.trim()) return;
+                const sentences = para.match(/[^\.!\?]+[\.!\?]+["']?|.+$/g) || [para];
+                totalSentences += sentences.length;
+
+                sentences.forEach(s => {
+                    const sWords = s.toLowerCase().match(/\b\w+\b/g) || [];
+                    let score = 0;
+                    sWords.forEach(w => { if(freq[w]) score += freq[w]; });
+                    
+                    // Normalize score by log length
+                    const density = sWords.length > 3 ? score / Math.log(sWords.length) : 0;
+                    allSentencesScores.push(density);
+                });
+            });
+
+            // Update Sentences Stat
+            els.stats.sentences.innerText = totalSentences;
+
+            // Determine Threshold (Top 20%)
+            allSentencesScores.sort((a,b) => b - a);
+            const thresholdIndex = Math.floor(allSentencesScores.length * 0.2);
+            const threshold = allSentencesScores[thresholdIndex] || 0;
+            
+            // Display Density Stat
+            els.stats.density.innerText = Math.round(threshold * 10) / 10;
+
+            // Generate HTML
+            let html = "";
+            paragraphs.forEach(para => {
+                if(!para.trim()) return;
+                html += "<p>";
+                
+                const sentences = para.match(/[^\.!\?]+[\.!\?]+["']?|.+$/g) || [para];
+                sentences.forEach(s => {
+                    const sWords = s.toLowerCase().match(/\b\w+\b/g) || [];
+                    let score = 0;
+                    sWords.forEach(w => { if(freq[w]) score += freq[w]; });
+                    const density = sWords.length > 3 ? score / Math.log(sWords.length) : 0;
+
+                    if (density >= threshold && density > 0) {
+                        html += `<mark>${s}</mark> `;
+                    } else {
+                        html += `<span>${s}</span> `;
+                    }
+                });
+                html += "</p>";
+            });
+
+            els.output.innerHTML = html;
+        }
+
+    </script>
+</body>
+</html>
