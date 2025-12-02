@@ -19,10 +19,9 @@ It runs entirely in a single HTML file—no servers, no installations, and no de
 
 ## 🚀 How to Use
 
-1.  Download `index.html`.
-2.  Open the file in any modern web browser (Chrome, Firefox, Safari, Edge).
-3.  Paste your text into the editor.
-4.  Click **Process** to transform your reading experience.
+1.  Download `index.html` and open in a modern web browser or visit [the website.](tinyurl.com/Clearread)
+2.  Paste your text into the editor.
+3.  Click **Process** to transform your reading experience.
 
 ## 🛠️ Customization
 
